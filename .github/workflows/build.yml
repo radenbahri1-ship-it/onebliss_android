@@ -5,6 +5,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Buka onebliss_android.zip bila ada
+        run: |
+          if [ -f onebliss_android.zip ]; then unzip -q -o onebliss_android.zip -d proj; fi
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '17' }
       - uses: android-actions/setup-android@v3
@@ -13,8 +16,9 @@ jobs:
       - name: Cari folder proyek (yang berisi settings.gradle)
         id: p
         run: |
-          D=$(dirname "$(find . -name settings.gradle -not -path './.git/*' | head -1)")
-          echo "Proyek: $D"; echo "dir=$D" >> "$GITHUB_OUTPUT"
+          F=$(find . -name settings.gradle -not -path './.git/*' | head -1)
+          if [ -z "$F" ]; then echo "settings.gradle tidak ditemukan"; ls -R | head -50; exit 1; fi
+          D=$(dirname "$F"); echo "Proyek: $D"; echo "dir=$D" >> "$GITHUB_OUTPUT"
       - name: Build
         working-directory: ${{ steps.p.outputs.dir }}
         run: gradle assembleDebug --no-daemon --stacktrace
